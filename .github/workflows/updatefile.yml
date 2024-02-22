@@ -1,0 +1,22 @@
+name: Deploy Repository to Server
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Deploy to server
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        source: "./*"
+        target: "/opt/1panel/apps/openresty/openresty/www/sites/CICD/index/"
+        rm: true # Optional: Remove the target directory contents before copying
