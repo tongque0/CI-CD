@@ -1,0 +1,40 @@
+# 此流程适合node项目打包部署
+name: Deploy Repository to Server
+
+on:
+  push:
+    branches: [test] #空，不执行
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Deploy to server
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        source: "NodeSever"
+        target: "/opt/1panel/apps/openresty/openresty/www/sites/qimengstar/index/NodeSever"
+        rm: true
+
+    - name: SSH into server and execute commands
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        script: |
+          cd /opt/1panel/apps/openresty/openresty/www/sites/qimengstar/index/NodeSever/NodeSever/
+          yarn config set registry http://registry.npm.taobao.org/
+          retries=3
+          until [ $retries -le 0 ] || yarn install; do
+            sleep 1
+            ((retries--))
+          done
+          fuser -k 3002/tcp
+          nohup npm run prod > output.log 2>&1 &

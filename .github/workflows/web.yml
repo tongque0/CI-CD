@@ -1,0 +1,34 @@
+# 适用于Vue打包部署
+name: Deploy Repository to Server
+
+on:
+  push:
+    branches: [ test ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set Production Environment Variables
+      run: |
+        echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> $GITHUB_ENV
+        # 添加其他生产环境变量
+
+    - name: Install Dependencies
+      run: npm install
+
+    - name: Build
+      run: npm run build
+
+    - name: Deploy to server
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.DEPLOY_KEY }}
+        source: "dist"
+        target: "/opt/1panel/apps/openresty/openresty/www/sites/qimengstar/index/dist"
+        rm: true
